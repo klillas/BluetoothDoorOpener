@@ -11,7 +11,6 @@ import android.speech.SpeechRecognizer;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,7 +18,6 @@ import android.widget.TextView;
 
 import com.example.bluetoothdooropenerapp.speech.CommandParser;
 import com.example.bluetoothdooropenerapp.speech.ICommandParser;
-import com.example.bluetoothdooropenerapp.speech.IListener;
 import com.example.bluetoothdooropenerapp.speech.ISpeechParser;
 import com.example.bluetoothdooropenerapp.speech.SpeechParser;
 
@@ -36,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
         TextView textView = (TextView) findViewById(R.id.debugText);
 
+        IConsole console = new Console(textView);
+        IDependencyInjector dependencyInjector = DependencyInjector.GetDependencyInjector();
+        dependencyInjector.InitializeDependencyInjector(console);
+
         requestRecordAudioPermission();
         requestBluetoothPermission();
 
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         ICommandParser commandParser = new CommandParser();
         commandParser.AddListener(garageControl);
 
-        ISpeechParser speechParser = new SpeechParser(textView);
+        ISpeechParser speechParser = new SpeechParser();
         speechParser.AddListener(commandParser);
 
         sr = SpeechRecognizer.createSpeechRecognizer(this);
@@ -66,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
 
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
                 sr.startListening(intent);
+            }
+        });
+
+        FloatingActionButton resetConsoleButton = findViewById(R.id.reset_console);
+        resetConsoleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                console.ClearConsole();
             }
         });
     }

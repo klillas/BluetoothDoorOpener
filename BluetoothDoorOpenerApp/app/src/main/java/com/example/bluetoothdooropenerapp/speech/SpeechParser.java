@@ -4,16 +4,18 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
-import android.widget.TextView;
+
+import com.example.bluetoothdooropenerapp.DependencyInjector;
+import com.example.bluetoothdooropenerapp.IConsole;
 
 import java.util.ArrayList;
 
 public class SpeechParser extends Speaker<String> implements RecognitionListener, ISpeechParser {
-    private TextView debugTextView;
+    private IConsole console;
 
-    public SpeechParser(TextView debugTextView)
+    public SpeechParser()
     {
-        this.debugTextView = debugTextView;
+        console = DependencyInjector.GetDependencyInjector().GetConsole();
     }
 
     @Override
@@ -67,7 +69,7 @@ public class SpeechParser extends Speaker<String> implements RecognitionListener
             String message = "message=" + str;
             Log.d("tag", message);
             //new Background_get().execute(message);
-            debugTextView.setText(message);
+            //console.WriteLine(message);
 
             Speak(str);
         }

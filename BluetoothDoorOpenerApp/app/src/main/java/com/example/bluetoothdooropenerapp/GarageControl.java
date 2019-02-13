@@ -15,10 +15,10 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
-import static android.support.v4.app.ActivityCompat.startActivityForResult;
 import static android.support.v4.content.ContextCompat.startActivity;
 
 public class GarageControl implements IGarageControl {
+    private IConsole console;
     private final BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice garageDevice;
     private Context context;
@@ -28,28 +28,32 @@ public class GarageControl implements IGarageControl {
 
     public GarageControl(Context context)
     {
+        console = DependencyInjector.GetDependencyInjector().GetConsole();
         this.context = context;
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
-    private boolean InitializeGarageConnection()
-    {
-        if (!bluetoothAdapter.isEnabled())
-        {
+    private boolean InitializeGarageConnection() {
+        if (!bluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(context, enableBluetooth, Bundle.EMPTY);
         }
 
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0)
-        {
-            for (BluetoothDevice device : pairedDevices)
-            {
-                if (device.getName().equals("HC-05"))
-                {
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                if (device.getName().equals("GARAGE-DOOR")) {
+                    console.WriteLine("GARAGE-DOOR found");
                     garageDevice = device;
                     return true;
                 }
+            }
+
+            console.WriteLine("Device not found");
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException ex) {
+                console.WriteLine(ex.getMessage());
             }
         }
         return false;
@@ -57,18 +61,37 @@ public class GarageControl implements IGarageControl {
 
     private boolean InitializeStreams()
     {
+        boolean isConnected = false;
+        long startTime = System.currentTimeMillis();
+        while (!isConnected && System.currentTimeMillis() - startTime < 60000)
+        {
+            console.WriteLine("Searching for device...");
+
+            try {
+                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); //Standard SerialPortService ID
+                socket = garageDevice.createRfcommSocketToServiceRecord(uuid);
+                socket.connect();
+            } catch (IOException ex) {
+                console.WriteLine(ex.getMessage());
+            }
+
+            isConnected = socket.isConnected();
+        }
+
+        if (!socket.isConnected())
+        {
+            console.WriteLine("Could not connect to device");
+            return false;
+        }
+
         try {
-            UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); //Standard SerialPortService ID
-            socket = garageDevice.createRfcommSocketToServiceRecord(uuid);
-            socket.connect();
             outStream = socket.getOutputStream();
             inStream = socket.getInputStream();
         }
         catch (IOException ex)
         {
-            return false;
+            console.WriteLine(ex.getMessage());
         }
-
         return true;
     }
 
@@ -111,6 +134,7 @@ public class GarageControl implements IGarageControl {
             return;
         }
 
+        console.WriteLine("Sending command open garage");
         WriteCharacter('0');
 
         CloseConnection();
@@ -128,6 +152,7 @@ public class GarageControl implements IGarageControl {
             return;
         }
 
+        console.WriteLine("Sending command close garage");
         WriteCharacter('1');
 
         CloseConnection();
