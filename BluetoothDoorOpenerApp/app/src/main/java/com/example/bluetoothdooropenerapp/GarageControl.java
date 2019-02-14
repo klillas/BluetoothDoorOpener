@@ -135,7 +135,7 @@ public class GarageControl implements IGarageControl {
         }
 
         console.WriteLine("Sending command open garage");
-        WriteCharacter('0');
+        WriteCharacter('1');
 
         CloseConnection();
     }
@@ -153,7 +153,7 @@ public class GarageControl implements IGarageControl {
         }
 
         console.WriteLine("Sending command close garage");
-        WriteCharacter('1');
+        WriteCharacter('0');
 
         CloseConnection();
     }

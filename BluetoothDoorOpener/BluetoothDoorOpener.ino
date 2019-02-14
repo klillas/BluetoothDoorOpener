@@ -1,11 +1,22 @@
 #include <SoftwareSerial.h>
 
+enum DoorState
+{
+  Open,
+  Closed,
+  Opening,
+  Closing
+};
+
 const int bluetoothTxPin = 2;
 const int bluetoothRxPin = 3;
 const int bluetoothEnPin = 10;
 const int relayPin = 5;
+const int millisToChangeDoorPosition = 30000;
 int state = 0;
 bool ATModeActive = false;
+DoorState doorState = Closed;
+unsigned long millisWhenLastActionStarted = millis();
 
 SoftwareSerial BTSerial(bluetoothRxPin, bluetoothTxPin); // RX, TX
 
@@ -24,6 +35,22 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  if (doorState == Opening || doorState == Closing)
+  {
+    unsigned long currentMillis = millis();
+    if ((unsigned long)(currentMillis - millisWhenLastActionStarted) >= millisToChangeDoorPosition)
+    {
+      if (doorState == Opening)
+      {
+        doorState = Open;
+      }
+      else if (doorState == Closing)
+      {
+        doorState = Closed;
+      }
+    }
+  }
+  
   if (ATModeActive)
   {
     ATMode();
@@ -48,8 +75,78 @@ void loop() {
     state = BTSerial.read();
   }
 
-  if (state == '0' || state == '1')
+  if (state == '0')
   {
+    CloseGarage();
+  }
+  else if (state == '1')
+  {
+    OpenGarage();
+  }
+  state = -1;
+  delay(500);
+}
+
+void OpenGarage()
+{
+  switch (doorState)
+  {
+    case Open:
+    case Opening:
+    {
+      break; 
+    }
+    case Closed:
+    {
+      SendRelayPulse();
+      doorState = Opening;
+      millisWhenLastActionStarted = millis();
+      break;
+    }
+    case Closing:
+    {
+      SendRelayPulse();
+      SendRelayPulse();
+      doorState = Opening;
+      // Because we are "in the middle" of closing the door, we can reduce the time needed to open it again
+      unsigned long millisClosing = millis() - millisWhenLastActionStarted;
+      millisWhenLastActionStarted = millis() - (millisToChangeDoorPosition - millisClosing);
+      break;      
+    }
+  }
+}
+
+void CloseGarage()
+{
+  switch (doorState)
+  {
+    case Closed:
+    case Closing:
+    {
+      break; 
+    }
+    case Open:
+    {
+      SendRelayPulse();
+      doorState = Opening;
+      millisWhenLastActionStarted = millis();
+      break;
+    }
+    case Opening:
+    {
+      SendRelayPulse();
+      SendRelayPulse();
+      doorState = Closing;
+      // Because we are "in the middle" of opening the door, we can reduce the time needed to open it again
+      unsigned long millisOpening = millis() - millisWhenLastActionStarted;
+      millisWhenLastActionStarted = millis() - (millisToChangeDoorPosition - millisOpening);
+      break;      
+    }
+  }
+}
+
+void SendRelayPulse()
+{
     BTSerial.println("Activating relay");
     Serial.println("Activating relay");
     
@@ -57,21 +154,15 @@ void loop() {
     BTSerial.println("LOW");
     Serial.println("LOW");
 
-    delay(2000);
+    delay(1000);
 
     digitalWrite(relayPin, HIGH);
     BTSerial.println("HIGH");
     Serial.println("HIGH");
-  }
-  state = -1;
-  delay(500);
-  //digitalWrite(relayPin, HIGH);   // turn the LED on (HIGH is the voltage level)
-  //digitalWrite(LED_BUILTIN, HIGH);
-  //delay(1000);                       // wait for a second
-  //digitalWrite(relayPin, LOW);    // turn the LED off by making the voltage LOW
-  //digitalWrite(LED_BUILTIN, LOW);
-  //delay(1000);                       // wait for a second
+
+    delay(1000);
 }
+
 
 void ATMode()
 {
