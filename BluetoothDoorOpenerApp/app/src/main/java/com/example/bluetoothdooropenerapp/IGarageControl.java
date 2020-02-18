@@ -1,7 +1,7 @@
 package com.example.bluetoothdooropenerapp;
 
-import com.example.bluetoothdooropenerapp.speech.EVoiceCommand;
+import com.example.bluetoothdooropenerapp.speech.EControlCommand;
 import com.example.bluetoothdooropenerapp.speech.IListener;
 
-public interface IGarageControl extends IListener<EVoiceCommand> {
+public interface IGarageControl extends IListener<EControlCommand> {
 }

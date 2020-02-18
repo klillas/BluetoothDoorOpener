@@ -17,6 +17,7 @@ int state = 0;
 bool ATModeActive = false;
 DoorState doorState = Closed;
 unsigned long millisWhenLastActionStarted = millis();
+const String pinCode = "AT+PSWD=0311";
 
 SoftwareSerial BTSerial(bluetoothRxPin, bluetoothTxPin); // RX, TX
 
@@ -67,6 +68,8 @@ void loop() {
       ATModeActive = true;
       BTSerial.begin(38400);
       BTSerial.write("AT\r\n");
+      //BTSerial.write(&pinCode);
+      //BTSerial.write("");
     }
   }
   
@@ -82,6 +85,23 @@ void loop() {
   else if (state == '1')
   {
     OpenGarage();
+  }
+  else if (state == '2')
+  {
+    switch (doorState)
+    {
+      case Open:
+      case Opening:
+      {
+        CloseGarage();
+        break;
+      }
+      case Closed:
+      case Closing:
+      {
+        OpenGarage();
+      }
+    }
   }
   state = -1;
   delay(500);

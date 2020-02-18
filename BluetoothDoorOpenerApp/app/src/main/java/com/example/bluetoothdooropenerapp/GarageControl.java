@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.example.bluetoothdooropenerapp.speech.EVoiceCommand;
+import com.example.bluetoothdooropenerapp.speech.EControlCommand;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,6 +140,24 @@ public class GarageControl implements IGarageControl {
         CloseConnection();
     }
 
+    public void PushGarage()
+    {
+        if (!InitializeGarageConnection())
+        {
+            return;
+        }
+
+        if (!InitializeStreams())
+        {
+            return;
+        }
+
+        console.WriteLine("Sending command push garage");
+        WriteCharacter('2');
+
+        CloseConnection();
+    }
+
     public void CloseGarage()
     {
         if (!InitializeGarageConnection())
@@ -159,7 +177,7 @@ public class GarageControl implements IGarageControl {
     }
 
     @Override
-    public void Listen(EVoiceCommand data) {
+    public void Listen(EControlCommand data) {
         switch (data)
         {
             case GARAGE_DOOR_OPEN:
@@ -168,6 +186,8 @@ public class GarageControl implements IGarageControl {
             case GARAGE_DOOR_CLOSE:
                 CloseGarage();
                 break;
+            case GARAGE_DOOR_PUSH:
+                PushGarage();
         }
     }
 }

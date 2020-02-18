@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -14,9 +15,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.bluetoothdooropenerapp.speech.CommandParser;
+import com.example.bluetoothdooropenerapp.speech.EControlCommand;
 import com.example.bluetoothdooropenerapp.speech.ICommandParser;
 import com.example.bluetoothdooropenerapp.speech.ISpeechParser;
 import com.example.bluetoothdooropenerapp.speech.SpeechParser;
@@ -28,11 +31,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setContentView(R.layout.garage_control);
+        // Toolbar toolbar = findViewById(R.id.toolbar);
+        // setSupportActionBar(toolbar);
 
-        TextView textView = (TextView) findViewById(R.id.debugText);
+        TextView textView = (TextView) findViewById(R.id.console);
 
         IConsole console = new Console(textView);
         IDependencyInjector dependencyInjector = DependencyInjector.GetDependencyInjector();
@@ -46,36 +49,28 @@ public class MainActivity extends AppCompatActivity {
         ICommandParser commandParser = new CommandParser();
         commandParser.AddListener(garageControl);
 
-        ISpeechParser speechParser = new SpeechParser();
-        speechParser.AddListener(commandParser);
+        //ISpeechParser speechParser = new SpeechParser();
+        //speechParser.AddListener(commandParser);
 
-        sr = SpeechRecognizer.createSpeechRecognizer(this);
-        sr.setRecognitionListener((RecognitionListener)speechParser);
+        //sr = SpeechRecognizer.createSpeechRecognizer(this);
+        //sr.setRecognitionListener((RecognitionListener)speechParser);
 
 
         //garageControl.OpenGarage();
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        Button buttonUp = findViewById(R.id.buttonUp);
+        buttonUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //        .setAction("Action", null).show();
-                // Activate the speech listener
-                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"voice.recognition.test");
-
-                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
-                sr.startListening(intent);
+                commandParser.Listen(EControlCommand.GARAGE_DOOR_OPEN);
             }
         });
 
-        FloatingActionButton resetConsoleButton = findViewById(R.id.reset_console);
-        resetConsoleButton.setOnClickListener(new View.OnClickListener() {
+        Button buttonDown = findViewById(R.id.buttonDown);
+        buttonDown.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                console.ClearConsole();
+                commandParser.Listen(EControlCommand.GARAGE_DOOR_CLOSE);
             }
         });
     }

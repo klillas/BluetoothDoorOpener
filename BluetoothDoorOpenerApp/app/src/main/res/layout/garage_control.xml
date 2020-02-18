@@ -1,0 +1,36 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.example.bluetoothdooropenerapp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/buttonUp"
+                android:text="Up" />
+
+            <Button
+                android:id="@+id/buttonDown"
+                android:text="Down" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/console"
+                android:layout_width="match_parent"
+                android:text="Console">
+            </TextView>
+
+        </TableRow>
+    </TableLayout>
+
+</FrameLayout>
